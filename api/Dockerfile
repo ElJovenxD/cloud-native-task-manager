@@ -1,7 +1,7 @@
 # 1. Usar una imagen base ligera de Node.js
 FROM node:18-alpine
 
-# 2. Crear un directorio de trabajo dentro del contenedor
+# 2. Crear un directorio de trabajo dentro del contenedor de app
 WORKDIR /usr/src/app
 
 # 3. Copiar los archivos de dependencias
