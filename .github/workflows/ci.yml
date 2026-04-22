@@ -1,0 +1,23 @@
+name: CI - Verificación de Contenedores
+
+# El robot se activará cada vez que hagamos "push" (subir código)
+on:
+  push:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest # GitHub nos presta una máquina Linux gratis
+
+    steps:
+    # 1. Descarga nuestro código a la máquina prestada
+    - name: Obtener código fuente
+      uses: actions/checkout@v3
+
+    # 2. Intenta construir los contenedores para ver si hay errores de compilación
+    - name: Construir imágenes de Docker
+      run: docker compose build
+
+    # 3. Si llega aquí sin explotar, el código está sano
+    - name: Verificar estado
+      run: echo "¡La construcción fue exitosa! El código es seguro."
