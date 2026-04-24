@@ -2,11 +2,12 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-
-// --- NUEVAS LIBRERÍAS DE CLOUDINARY ---
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
+
+// --- NUEVO: El creador de llaves VIP ---
+const jwt = require('jsonwebtoken'); 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,41 +15,72 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// 1. Configurar conexión a Cloudinary
+// 1. Configurar Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// 2. Configurar la carpeta y el guardado automático
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'portafolio_assets', // <--- ¡Aquí separamos esto de las fotos de 3!!
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'gif']
+    folder: 'portafolio_assets',
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'gif', 'mp4']
   }
 });
 const upload = multer({ storage: storage });
 
-// 3. Conexión a MongoDB
+// 2. Conexión a MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('¡Conectado a MongoDB exitosamente! 🚀'))
   .catch(err => console.error('Error al conectar a MongoDB:', err));
 
-// 4. Molde del Proyecto
+// 3. Molde del Proyecto
 const ProyectoSchema = new mongoose.Schema({
   titulo: String,
   descripcion: String,
   tecnologias: [String],
   enlaceDemo: String,
-  imagenUrl: String, // Aquí guardaremos la URL que nos devuelva Cloudinary
+  imagenUrl: String,
   fecha: { type: Date, default: Date.now }
 });
 const Proyecto = mongoose.model('Proyecto', ProyectoSchema);
 
-// 5. Rutas (Endpoints)
-// Obtener todos
+// --- NUEVO: EL CADENERO (Middleware de Seguridad) ---
+// Esta función intercepta las peticiones y revisa si traen el Token correcto
+const verificarToken = (req, res, next) => {
+  // Busca el token en el encabezado de la petición
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Viene como: "Bearer eyJhbGci..."
+
+  if (!token) return res.status(401).json({ error: 'Alto ahí. No tienes un pase VIP.' });
+
+  // Si hay token, verificamos que tenga tu firma secreta
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Este pase es falso o ya expiró.' });
+    req.user = user;
+    next(); // ¡Adelante, puedes pasar!
+  });
+};
+
+// --- NUEVO: RUTA DE LOGIN (La Taquilla) ---
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body;
+
+  // Verificamos si las credenciales coinciden con las de tu .env
+  if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
+    // ¡Eres tú! Te fabricamos un pase VIP que dura 24 horas
+    const token = jwt.sign({ admin: true }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    res.json({ token });
+  } else {
+    res.status(401).json({ error: 'Credenciales incorrectas' });
+  }
+});
+
+// 4. Rutas (Endpoints) de tus Proyectos
+
+// GET: PÚBLICA (Cualquier reclutador puede ver los proyectos)
 app.get('/api/proyectos', async (req, res) => {
   try {
     const proyectos = await Proyecto.find().sort({ fecha: -1 });
@@ -58,11 +90,9 @@ app.get('/api/proyectos', async (req, res) => {
   }
 });
 
-// Crear nuevo (¡AHORA ACEPTA IMÁGENES!)
-// Usamos upload.single('imagen') para interceptar el archivo antes de guardar en Mongo
-app.post('/api/proyectos', upload.single('imagen'), async (req, res) => {
+// POST: PRIVADA (Le pusimos a "verificarToken" como guardia)
+app.post('/api/proyectos', verificarToken, upload.single('imagen'), async (req, res) => {
   try {
-    // Si subieron una imagen, Cloudinary nos devuelve la URL mágica en req.file.path
     const imageUrl = req.file ? req.file.path : ''; 
 
     const nuevoProyecto = new Proyecto({
@@ -70,7 +100,7 @@ app.post('/api/proyectos', upload.single('imagen'), async (req, res) => {
       descripcion: req.body.descripcion,
       tecnologias: req.body.tecnologias ? req.body.tecnologias.split(',') : [],
       enlaceDemo: req.body.enlaceDemo,
-      imagenUrl: imageUrl // Guardamos el texto del enlace en la base de datos
+      imagenUrl: imageUrl
     });
 
     await nuevoProyecto.save();
@@ -78,6 +108,16 @@ app.post('/api/proyectos', upload.single('imagen'), async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(400).json({ error: 'Error al crear proyecto' });
+  }
+});
+
+// DELETE: PRIVADA (Para que puedas borrar posteos viejos)
+app.delete('/api/proyectos/:id', verificarToken, async (req, res) => {
+  try {
+    await Proyecto.findByIdAndDelete(req.params.id);
+    res.json({ mensaje: '¡Proyecto eliminado con éxito!' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al intentar eliminar' });
   }
 });
 
