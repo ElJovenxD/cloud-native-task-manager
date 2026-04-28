@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useParams } from 'react-router-dom';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 // --- COMPONENTE DE FONDO (Corregido con medidas válidas) ---
 const EfectoMage = () => {
   const blobRef = React.useRef(null);
@@ -118,7 +120,7 @@ const Home = () => {
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/proyectos')
+    fetch(`${API_URL}/api/proyectos`)
       .then(res => res.json())
       .then(data => { setProyectos(data); setCargando(false); })
       .catch(error => console.error("Error:", error));
@@ -230,7 +232,7 @@ const ProyectoDetalle = () => {
   const [proyecto, setProyecto] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:3000/api/proyectos')
+    fetch(`${API_URL}/api/proyectos`)
       .then(res => res.json())
       .then(data => setProyecto(data.find(p => p._id === id)));
   }, [id]);
@@ -295,7 +297,7 @@ const AdminPanel = () => {
   };
 
   const cargarMisProyectos = () => {
-    fetch('http://localhost:3000/api/proyectos').then(res => res.json()).then(data => setMisProyectos(data));
+    fetch(`${API_URL}/api/proyectos`).then(res => res.json()).then(data => setMisProyectos(data));
   };
 
   useEffect(() => { if (token) cargarMisProyectos(); }, [token]);
@@ -319,7 +321,7 @@ const AdminPanel = () => {
     setSubiendo(true);
     
     try {
-      const res = await fetch(`http://localhost:3000/api/proyectos/${proyectoEditando._id}`, {
+      const res = await fetch(`${API_URL}/api/proyectos/${proyectoEditando._id}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -350,7 +352,7 @@ const AdminPanel = () => {
     formData.append('explicaciones', explicaciones.join('||'));
     archivos.forEach(file => formData.append('media', file));
 
-    const res = await fetch('http://localhost:3000/api/proyectos', {
+    const res = await fetch(`${API_URL}/api/proyectos`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
       body: formData
@@ -366,7 +368,7 @@ const AdminPanel = () => {
   };
 
   const confirmarEliminar = async () => {
-    await fetch(`http://localhost:3000/api/proyectos/${modalEliminar.id}`, {
+    await fetch(`${API_URL}/api/proyectos/${modalEliminar.id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -382,7 +384,7 @@ const AdminPanel = () => {
           <h2 className="text-2xl font-black mb-8 text-center text-emerald-400 uppercase tracking-tighter">Acceso Restringido</h2>
           <form onSubmit={async (e) => {
             e.preventDefault();
-            const res = await fetch('http://localhost:3000/api/login', {
+            const res = await fetch(`${API_URL}/api/login`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ username, password })
