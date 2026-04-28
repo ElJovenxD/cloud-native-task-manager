@@ -3,27 +3,84 @@ import { BrowserRouter, Routes, Route, Link, useParams } from 'react-router-dom'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-// --- COMPONENTE DE FONDO (Azul Vergil / Rojo Dante) ---
-const EfectoSparda = () => {
-  const blobRef = React.useRef(null);
-  React.useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (blobRef.current) {
-        blobRef.current.style.transform = `translate(${e.clientX - 400}px, ${e.clientY - 400}px)`;
+// --- COMPONENTE DE FONDO: JUDGMENT CUT END (Versión Mejorada) ---
+const EfectoYamato = () => {
+  const [cortes, setCortes] = useState([]);
+
+  useEffect(() => {
+    // Función para generar una "ráfaga" de cortes
+    const ejecutarJudgmentCut = () => {
+      // Genera un combo de entre 2 y 5 cortes cruzados
+      const numCortes = Math.floor(Math.random() * 4) + 2;
+      const nuevosCortes = [];
+
+      for (let i = 0; i < numCortes; i++) {
+        nuevosCortes.push({
+          id: Date.now() + Math.random(),
+          // Centramos el punto de origen en un rango del 20% al 80% de la pantalla
+          x: 20 + Math.random() * 60, 
+          y: 20 + Math.random() * 60, 
+          angle: Math.random() * 180, // Cubre todos los ángulos de cruce
+          length: '150vw', // ¡MAGIA! 150% del ancho de la pantalla para garantizar extremo a extremo
+          retraso: Math.random() * 0.3, // Pequeño retraso entre cada corte del combo
+        });
       }
+
+      setCortes((prev) => [...prev, ...nuevosCortes]);
+
+      // Borramos los cortes del DOM después de 1.5 segundos para no saturar la RAM
+      setTimeout(() => {
+        setCortes((prev) => prev.filter(c => !nuevosCortes.map(nc => nc.id).includes(c.id)));
+      }, 1500);
     };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+
+    // Disparamos un Judgment Cut cada 2.5 a 4 segundos (para que no sea molesto al leer)
+    const interval = setInterval(() => {
+      ejecutarJudgmentCut();
+    }, 3000); 
+
+    // Disparamos el primero al cargar la página
+    ejecutarJudgmentCut();
+
+    return () => clearInterval(interval);
   }, []);
+
   return (
     <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-50 pointer-events-none bg-[#050505]">
-      <div ref={blobRef} className="absolute top-0 left-0 w-[800px] h-[800px] rounded-full mix-blend-screen filter blur-[120px] opacity-30"
-        /* Mezcla de Azul (Vergil/Superman) y Rojo (Dante) */
-        style={{ background: 'radial-gradient(circle, rgba(37,99,235,0.4) 0%, rgba(220,38,38,0.15) 40%, rgba(0,0,0,0) 70%)', transition: 'transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1)' }}
+      
+      {/* El aura base oscura que combina el azul (Vergil/Superman) y el rojo (Dante) */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vh] mix-blend-screen filter blur-[150px] opacity-20"
+        style={{ background: 'radial-gradient(circle, rgba(37,99,235,0.4) 0%, rgba(220,38,38,0.1) 40%, rgba(0,0,0,0) 70%)' }}
       />
+
+      {/* Renderizado de los Tajos Dimensionales */}
+      {cortes.map(corte => (
+        <div
+          key={corte.id}
+          className="absolute"
+          style={{
+            top: `${corte.y}%`,
+            left: `${corte.x}%`,
+            /* translate(-50%, -50%) es clave para que el corte gire exactamente sobre su centro */
+            transform: `translate(-50%, -50%) rotate(${corte.angle}deg)`, 
+            width: corte.length,
+            height: '2px', // Grosor base del tajo
+          }}
+        >
+          {/* El tajo blanco brillante con aura azul Vergil */}
+          <div
+            className="w-full h-full bg-white shadow-[0_0_25px_5px_rgba(59,130,246,0.9),0_0_50px_rgba(255,255,255,1)] animate-yamato"
+            style={{
+              animationDelay: `${corte.retraso}s`,
+              borderRadius: '100%',
+            }}
+          />
+        </div>
+      ))}
     </div>
   );
 };
+
 // --- COMPONENTE MOTOR DE ANIMACIÓN (Scroll Reveal) ---
 const Reveal = ({ children, retraso = 0 }) => {
   const [esVisible, setEsVisible] = useState(false);
@@ -74,7 +131,7 @@ const Trayectoria = () => (
         <span className="absolute -left-[33px] top-1 w-4 h-4 rounded-full bg-blue-500 border-4 border-[#121212] shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
         <h4 className="text-sm font-bold text-zinc-100">Desarrollador Full-Stack Independiente</h4>
         <p className="text-blue-400 text-[10px] font-bold mb-2 uppercase tracking-widest">Proyectos Propios • 2025 - Presente</p>
-        <p className="text-zinc-400 text-xs leading-relaxed">
+        <p className="text-blue-100/70 text-xs leading-relaxed">
           Diseño y ejecución de arquitecturas de software. Creación de herramientas desde UI/UX hasta infraestructura y backend.
         </p>
       </div>
@@ -84,7 +141,7 @@ const Trayectoria = () => (
         <span className="absolute -left-[33px] top-1 w-4 h-4 rounded-full bg-zinc-700 border-4 border-[#121212]"></span>
         <h4 className="text-sm font-bold text-zinc-100">Ingeniería de Software</h4>
         <p className="text-zinc-500 text-[10px] font-bold mb-2 uppercase tracking-widest">UTL • 2024 - Actualidad</p>
-        <p className="text-zinc-400 text-xs leading-relaxed">
+        <p className="text-blue-100/70 text-xs leading-relaxed">
           Programación estructurada, arquitecturas escalables, bases de datos avanzadas y buenas prácticas.
         </p>
       </div>
@@ -94,7 +151,7 @@ const Trayectoria = () => (
         <span className="absolute -left-[33px] top-1 w-4 h-4 rounded-full bg-zinc-700 border-4 border-[#121212]"></span>
         <h4 className="text-sm font-bold text-zinc-100">Administración y Operaciones</h4>
         <p className="text-zinc-500 text-[10px] font-bold mb-2 uppercase tracking-widest">Negocio Familiar • 10 años exp.</p>
-        <p className="text-zinc-400 text-xs leading-relaxed">
+        <p className="text-blue-100/70 text-xs leading-relaxed">
           Disciplina operativa y resolución de problemas bajo presión en un entorno de negocio real.
         </p>
       </div>
@@ -142,12 +199,12 @@ const Home = () => {
                 <h1 className="text-4xl md:text-5xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-red-500 tracking-tighter leading-tight">
                   José de Jesús<br/>Martín Zúñiga
                 </h1>
-                <p className="text-zinc-400 text-sm max-w-xl leading-relaxed mb-6">
+                <p className="text-blue-100/70 text-sm max-w-xl leading-relaxed mb-6">
                   Desarrollador Full-Stack especializado en la creación de aplicaciones web y arquitecturas robustas. Combinando diseño de interfaces premium con lógica escalable en el backend. Radicando en León, Guanajuato.
                 </p>
                 <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-6">
                   {['JavaScript', 'TypeScript', 'React', 'Node.js', 'Express', 'MongoDB', 'Tailwind', 'Java', 'Spring', 'Vue', 'PHP', 'Docker'].map(tech => (
-                    <span key={tech} className="px-2.5 py-1 bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-300 text-[9px] font-bold uppercase tracking-wider">{tech}</span>
+                    <span key={tech} className="px-2.5 py-1 bg-blue-950/30 border border-blue-900/50 rounded-lg text-blue-200 text-[9px] font-bold uppercase tracking-wider backdrop-blur-sm">{tech}</span>
                   ))}
                 </div>
                 <div className="flex flex-wrap justify-center md:justify-start gap-3">
@@ -180,7 +237,7 @@ const Home = () => {
                 {proyectos.map((proyecto, index) => (
                   /* ANIMACIÓN 3: Efecto Cascada. Cada tarjeta tarda 150ms más que la anterior */
                   <Reveal key={proyecto._id} retraso={index * 150}>
-                    <div className="bg-zinc-900/60 border border-zinc-800 rounded-3xl overflow-hidden hover:border-blue-500/50 transition-all duration-300 flex flex-col group h-full">
+                    <div className="bg-[#030712]/80 border border-blue-900/30 rounded-3xl overflow-hidden hover:border-red-500/50 transition-all duration-500 flex flex-col group h-full shadow-[0_4px_20px_rgba(37,99,235,0.05)] hover:shadow-[0_4px_30px_rgba(220,38,38,0.15)]">
                       <div className="h-40 w-full bg-zinc-950 overflow-hidden">
                         {proyecto.galeria?.length > 0 && (
                           proyecto.galeria[0].url.endsWith('.mp4') ? (
@@ -194,7 +251,7 @@ const Home = () => {
                         <h3 className="text-lg font-bold text-zinc-100 mb-2">{proyecto.titulo}</h3>
                         <div className="flex flex-wrap gap-1 mb-4">
                           {proyecto.tecnologias.slice(0, 3).map((tech, i) => (
-                            <span key={i} className="text-[8px] uppercase tracking-widest px-2 py-0.5 bg-zinc-950 border border-zinc-800 rounded text-blue-400 font-bold">{tech.trim()}</span>
+                            <span key={i} className="text-[8px] uppercase tracking-widest px-2 py-0.5 bg-blue-950/30 border border-blue-900/50 rounded text-blue-400 font-bold">{tech.trim()}</span>
                           ))}
                           {proyecto.tecnologias.length > 3 && <span className="text-[8px] uppercase px-2 py-0.5 text-zinc-500 font-bold">+{proyecto.tecnologias.length - 3}</span>}
                         </div>
@@ -238,7 +295,7 @@ const ProyectoDetalle = () => {
       .then(data => setProyecto(data.find(p => p._id === id)));
   }, [id]);
 
-  if (!proyecto) return <div className="p-12 text-center text-zinc-400">Cargando...</div>;
+  if (!proyecto) return <div className="p-12 text-center text-blue-100/70">Cargando...</div>;
 
   return (
     <div className="max-w-4xl mx-auto p-6 md:p-12 relative z-10">
@@ -258,7 +315,7 @@ const ProyectoDetalle = () => {
             </div>
             {item.explicacion && (
               <div className="bg-zinc-900/40 p-4 rounded-xl border-l-2 border-blue-500/50">
-                <p className="text-zinc-400 text-sm italic uppercase tracking-tight mb-1">Contexto técnico:</p>
+                <p className="text-blue-100/70 text-sm italic uppercase tracking-tight mb-1">Contexto técnico:</p>
                 <p className="text-zinc-200">{item.explicacion}</p>
               </div>
             )}
@@ -471,7 +528,7 @@ const AdminPanel = () => {
                     {/* BOTÓN EDITAR */}
                     <button 
                       onClick={() => { setProyectoEditando({...p, tecnologias: p.tecnologias.join(',')}); setModalEditar(true); }}
-                      className="flex-1 py-2 bg-zinc-800 hover:bg-blue-600 text-zinc-400 hover:text-white rounded-xl text-[10px] font-black uppercase transition-all"
+                      className="flex-1 py-2 bg-zinc-800 hover:bg-blue-600 text-blue-100/70 hover:text-white rounded-xl text-[10px] font-black uppercase transition-all"
                     >
                       Editar Info
                     </button>
@@ -578,7 +635,7 @@ const AdminPanel = () => {
 function App() {
   return (
     <BrowserRouter>
-      <EfectoSparda />
+      <EfectoYamato />
 
       {/* 🔥 Layout FIX */}
       <div className="min-h-screen flex flex-col text-white">
@@ -588,6 +645,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/proyecto/:id" element={<ProyectoDetalle />} />
+            <Route path="/admin" element={<AdminPanel />} /> {/* <-- ¡Esta línea te faltaba! */}
           </Routes>
         </div>
 
