@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+body {
+  /* Gradiente que mezcla un esmeralda súper oscuro con negro */
+  background: radial-gradient(ellipse at bottom, #064e3b 0%, #052e16 20%, #000000 100%);
+  @apply text-emerald-50;
+  margin: 0;
+  font-family: 'Inter', system-ui, Avenir, sans-serif;
+  min-height: 100vh;
+}
