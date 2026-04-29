@@ -284,10 +284,13 @@ const Home = () => {
   );
 };
 
-// --- 2. VISTA DETALLE ---
+// --- 2. VISTA DETALLE (Con Lightbox para Ampliar Imágenes) ---
 const ProyectoDetalle = () => {
   const { id } = useParams();
   const [proyecto, setProyecto] = useState(null);
+  
+  // 🔥 NUEVO ESTADO: Guarda la URL de la imagen a la que le diste clic
+  const [imagenAmpliada, setImagenAmpliada] = useState(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/proyectos`)
@@ -310,7 +313,13 @@ const ProyectoDetalle = () => {
               {item.url.endsWith('.mp4') ? (
                 <video src={item.url} controls className="w-full" />
               ) : (
-                <img src={item.url} alt={`Imagen ${index}`} className="w-full" />
+                // 🔥 MAGIA AQUÍ: cursor-zoom-in y el evento onClick
+                <img 
+                  src={item.url} 
+                  alt={`Imagen ${index}`} 
+                  className="w-full cursor-zoom-in hover:opacity-80 transition-opacity duration-300" 
+                  onClick={() => setImagenAmpliada(item.url)}
+                />
               )}
             </div>
             {item.explicacion && (
@@ -322,6 +331,30 @@ const ProyectoDetalle = () => {
           </div>
         ))}
       </div>
+
+      {/* 🔥 EL LIGHTBOX (VISOR DE IMAGEN GIGANTE) */}
+      {imagenAmpliada && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 md:p-10 cursor-zoom-out"
+          onClick={() => setImagenAmpliada(null)}
+        >
+          {/* Botón de cerrar por si el usuario no intuye que dando clic al fondo se cierra */}
+          <button 
+            className="absolute top-6 right-6 md:top-10 md:right-10 text-zinc-500 hover:text-red-500 text-4xl font-bold transition-colors"
+            onClick={() => setImagenAmpliada(null)}
+          >
+            &times;
+          </button>
+          
+          <img 
+            src={imagenAmpliada} 
+            className="max-w-full max-h-full object-contain rounded-2xl shadow-[0_0_50px_rgba(37,99,235,0.15)] border border-blue-900/30" 
+            alt="Ampliación"
+            // Esto evita que se cierre la foto si le das clic accidentalmente a la foto misma
+            onClick={(e) => e.stopPropagation()} 
+          />
+        </div>
+      )}
     </div>
   );
 };
