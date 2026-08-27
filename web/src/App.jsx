@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useParams } from 'react-router-dom';
 
-const API_URL = '[https://cloud-native-task-manager-5a8q.onrender.com](https://cloud-native-task-manager-5a8q.onrender.com)';
+const API_URL = import.meta.env.VITE_API_URL || 'https://cloud-native-task-manager-5a8q.onrender.com';
 
 // --- COMPONENTE DE FONDO: JUDGMENT CUT END (Versión Mejorada) ---
 const EfectoYamato = () => {
