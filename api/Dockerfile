@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 3000
 
 # 7. Comando para iniciar la aplicación en modo desarrollo
-CMD ["npm", "run", "dev"]
+CMD ["node", "index.js"]
